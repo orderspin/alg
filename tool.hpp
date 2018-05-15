@@ -1,3 +1,6 @@
+#ifndef TOOL_H
+#define TOOL_H
+
 #include <iostream>
 
 template <typename T>
@@ -11,3 +14,5 @@ std::ostream& operator << (std::ostream& out, std::vector<T> vec) {
     out << "]";
     return out;
 }
+
+#endif
