@@ -1,0 +1,133 @@
+#ifndef SORT_H
+#define SORT_H
+
+#include <vector>
+#include <string>
+
+void exchange(std::vector<int> &input, int i, int j);
+
+std::vector<int> selection(std::vector<int> to_sort);
+std::vector<int> insertion(std::vector<int> to_sort);
+
+
+void exchange(std::vector<int> &input, int i, int j) {
+    if (i != j) {
+        int tmp = input[i];
+        input[i] = input[j];
+        input[j] = tmp;
+    }
+}
+
+std::vector<int> selection(std::vector<int> to_sort) {
+    int N = to_sort.size();
+    for (int i = 0; i < N; i++) {
+        int min = i;
+        for (int j = i + 1; j < N; j++) {
+            if (to_sort[j] < to_sort[i]) {
+                min = j;
+            }
+        }
+        exchange(to_sort, min, i);
+    }
+    return to_sort;
+}
+
+std::vector<int> insertion(std::vector<int> to_sort) {
+    int N = to_sort.size();
+    for (int i = 1; i < N; i++) {
+        for (int j = i; j > 0 && to_sort[j] < to_sort[j - 1]; j--) {
+            exchange(to_sort, j, j - 1);
+        }
+    }
+}
+
+
+
+struct SortTest {
+    struct SortFunc;
+
+    int length;
+    std::vector<int> to_sort;
+    std::vector<SortFunc> func_vec;
+
+    void initialize(int t_length, int l_range, int r_range);
+    SortTest();
+    SortTest(int t_length, int l_range, int r_range);
+
+    SortTest& add_func(const SortFunc &sortfunc);
+    SortTest& add_func(std::vector<int>(*func)(std::vector<int>), std::string name);
+
+    SortTest& run(int index);
+    SortTest& run_all();
+};
+
+struct SortTest::SortFunc {
+    double time_cost;
+    std::string name;
+
+    std::vector<int> sorted;
+    std::vector<int>(*func)(std::vector<int>);
+
+    SortFunc(std::vector<int>(*t_func)(std::vector<int>), std::string t_name);
+
+    void run(std::vector<int> to_sort);
+    bool is_sorted();
+};
+
+SortTest::SortTest() {
+    this->initialize(10, 0, 100);
+}
+
+SortTest::SortTest(int t_length, int l_range = 0, int r_range = 100) {
+    this->initialize(t_length, l_range, r_range);
+}
+
+void SortTest::initialize(int t_length, int l_range, int r_range) {
+    this->length = t_length;
+    srand(time(0));
+    int range = r_range - l_range;
+    for(int i = 0; i < range; i++) {
+        this->to_sort.push_back(rand() % range + l_range);
+    }
+}
+
+SortTest& SortTest::add_func(const SortFunc &sortfunc) {
+    this->func_vec.push_back(sortfunc);
+    return *this;
+}
+
+SortTest& SortTest::add_func(std::vector<int>(*func)(std::vector<int>), std::string name = "noname") {
+    this->func_vec.push_back(SortTest::SortFunc(func, name));
+    return *this;
+}
+
+SortTest& SortTest::run(int index) {
+    this->func_vec[index].run(this->to_sort);
+    return *this;
+}
+
+SortTest& SortTest::run_all() {
+    for(int i = 0; i < this->func_vec.size(); i++) {
+        this->run(i);
+    }
+    return *this;
+}
+
+SortTest::SortFunc::SortFunc(std::vector<int>(*t_func)(std::vector<int>), std::string t_name = "noname"): time_cost(0), name(t_name), func(t_func) {}
+
+void SortTest::SortFunc::run(std::vector<int> to_sort) {
+    double start_time = clock();
+    this->sorted = this->func(to_sort);
+    this->time_cost = (clock() - start_time) / CLOCKS_PER_SEC;
+}
+
+bool SortTest::SortFunc::is_sorted() {
+    for(int i = 0; i < this->sorted.size() - 1; i++) {
+        if(sorted[i] > sorted[i + 1]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+#endif
